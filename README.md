@@ -9,4 +9,4 @@ https://maskedmonkyman.github.io/Lab5/
 
 ## Part 2:
 
-LINK TO YOUR PART 2 REPOSITORY
+https://github.com/maskedmonkyman/github-actions-for-ci
