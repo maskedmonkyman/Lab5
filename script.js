@@ -96,6 +96,8 @@ generateButton.onclick = () => {
     drawMessuredText(topTextField.value, 15, true);
     drawMessuredText(botTextField.value, 15, false);
     generateButton.disabled = true;
+    clearButton.disabled = false;
+    readTextButton.disabled = false;
     return false;
 }
 
@@ -117,9 +119,6 @@ img.addEventListener('load', () => {
     context.fillRect(0, 0, canvas.width, canvas.height);
     const dimensions = getDimmensions(canvas.width, canvas.height, img.width, img.height);
     context.drawImage(img, dimensions.startX, dimensions.startY, dimensions.width, dimensions.height);
-
-    clearButton.disabled = false;
-    readTextButton.disabled = false;
   // Some helpful tips:
   // - Fill the whole Canvas with black first to add borders on non-square images, then draw on top
   // - Clear the form when a new image is selected
