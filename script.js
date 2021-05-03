@@ -18,6 +18,10 @@ const context = canvas.getContext('2d');
 var imgURL = null;
 let voices = window.speechSynthesis.getVoices();
 
+clearButton.disabled = true;
+readTextButton.disabled = true;
+generateButton.disabled = false;
+
 if (voices.length > 0)
 {
     voiceSelector.remove(voiceSelector.selectedIndex);
