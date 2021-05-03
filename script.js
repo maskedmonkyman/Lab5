@@ -1,16 +1,58 @@
 // script.js
 
-const imageInput = document.getElementById("image-input");
-const canvas = document.getElementById("user-image");
+const imageInput     = document.getElementById("image-input");
+const canvas         = document.getElementById("user-image");
+const topTextField   = document.getElementById("text-top");
+const botTextField   = document.getElementById("text-bottom");
+const voiceSelector  = document.getElementById("voice-selection");
+const clearButton    = document.querySelector("[type='reset']");
+const readTextButton = document.querySelector("[type='button']");
+const generateButton = document.querySelector("[type='submit']");
+const volumeSlider   = document.querySelector("[type='range']");
+const volumeIcon     = document.querySelector("[alt='Volume Level 3']")
 
 const URL = window.URL || window.webkitURL;
-
 const img = new Image(); // used to load image from <input> and draw to canvas
-var imgURL = null;
 const context = canvas.getContext('2d');
 
-function makeImage()
+var imgURL = null;
+let voices = window.speechSynthesis.getVoices();
+
+if (voices.length > 0)
 {
+    voiceSelector.remove(voiceSelector.selectedIndex);
+    voiceSelector.disabled = false;
+}
+
+for(let i = 0; i < voices.length; i++)
+{
+    let option = document.createElement('option');
+    option.textContent = voices[i].name + "(" + voices[i].lang + ")";
+
+    if (voices[i].default)
+        option.textContent += " -- defualt";
+
+    option.setAttribute("data-lang", voices[i].lang);
+    option.setAttribute("data-name", voices[i].name);
+    option.setAttribute("name", i);
+    voiceSelector.appendChild(option);
+}
+
+function speakText(text)
+{
+    let voiceIndex = Number(voiceSelector.selectedOptions[0].getAttribute("name"))
+    let utterTop = new SpeechSynthesisUtterance(text);
+    utterTop.volume = volumeSlider.value/volumeSlider.max;
+    utterTop.voice = voices[voiceIndex];
+    window.speechSynthesis.speak(utterTop); 
+}
+
+readTextButton.addEventListener("click", () => {
+    speakText("top text is. " + topTextField.value);
+    speakText("botom text is. " + botTextField.value);
+});
+
+imageInput.addEventListener("change", () => {
     if (!imgURL)
     imgURL = URL.createObjectURL(imageInput.files[0]);
     else
@@ -19,20 +61,61 @@ function makeImage()
         imgURL = URL.createObjectURL(imageInput.files[0]);
     }
 
+    canvas.alt = imageInput.files[0].name;
     img.src = imgURL;
+}, false);
+
+clearButton.addEventListener("click", () => {
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    clearButton.disabled = true;
+    readTextButton.disabled = true;
+    generateButton.disabled = false;
+    URL.revokeObjectURL(imgURL);
+    imgURL = null;
+});
+
+function drawMessuredText(text, pad, drawOnTop)
+{
+    let measurement = context.measureText(text);
+    let ypos = measurement.actualBoundingBoxDescent + measurement.actualBoundingBoxAscent + pad;
+    let xpos = canvas.width/2 - measurement.width/2;
+
+    if (!drawOnTop)
+        ypos = canvas.height - pad;
+
+    context.fillText(text, xpos, ypos);
 }
 
-imageInput.addEventListener("change", makeImage, false)
+generateButton.onclick = () => {
+    context.font = '50px sans-serif';
+    context.fillStyle = "white";
+    drawMessuredText(topTextField.value, 15, true);
+    drawMessuredText(botTextField.value, 15, false);
+    generateButton.disabled = true;
+    return false;
+}
+
+volumeSlider.addEventListener("input", () => {
+    if (volumeSlider.value >= 67)
+        volumeIcon.src = "icons/volume-level-3.svg"
+    else if (volumeSlider.value >= 34)
+        volumeIcon.src = "icons/volume-level-2.svg"
+    else if (volumeSlider.value >= 1)
+        volumeIcon.src = "icons/volume-level-1.svg"
+    else
+        volumeIcon.src = "icons/volume-level-0.svg"
+
+})
 
 // Fires whenever the img object loads a new image (such as with img.src =)
 img.addEventListener('load', () => {
-  // TODO
-
     context.fillStyle = "black";
     context.fillRect(0, 0, canvas.width, canvas.height);
     const dimensions = getDimmensions(canvas.width, canvas.height, img.width, img.height);
     context.drawImage(img, dimensions.startX, dimensions.startY, dimensions.width, dimensions.height);
-  
+
+    clearButton.disabled = false;
+    readTextButton.disabled = false;
   // Some helpful tips:
   // - Fill the whole Canvas with black first to add borders on non-square images, then draw on top
   // - Clear the form when a new image is selected
